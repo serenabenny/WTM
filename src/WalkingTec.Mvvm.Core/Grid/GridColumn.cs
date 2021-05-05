@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using Newtonsoft.Json;
+using WalkingTec.Mvvm.Core.Extensions;
 
 namespace WalkingTec.Mvvm.Core
 {
@@ -36,7 +38,7 @@ namespace WalkingTec.Mvvm.Core
                     _field = PI?.Name;
                     if (_field == null)
                     {
-                        _field = (ColumnExp?.Body as ConstantExpression)?.Value?.ToString();
+                        _field = CompiledCol?.Invoke(null).ToString();
                     }
                 }
                 return _field;
@@ -61,8 +63,9 @@ namespace WalkingTec.Mvvm.Core
                 }
                 return _title;
             }
-            set {
-                    _title = value;
+            set
+            {
+                _title = value;
             }
         }
 
@@ -70,7 +73,10 @@ namespace WalkingTec.Mvvm.Core
         /// 列宽
         /// </summary>
         public int? Width { get; set; }
-
+        /// <summary>
+        /// //监听单元格事件
+        /// </summary>
+        public string Event { get; set; }
         /// <summary>
         /// 是否允许排序
         /// </summary>
@@ -95,6 +101,11 @@ namespace WalkingTec.Mvvm.Core
         /// 隐藏列
         /// </summary>
         public bool? Hide { get; set; }
+
+        /// <summary>
+        /// 是否禁止导出此列
+        /// </summary>
+        public bool DisableExport { get; set; }
 
         /// <summary>
         /// 子列
@@ -356,6 +367,19 @@ namespace WalkingTec.Mvvm.Core
             }
         }
 
+
+        public bool HasFormat()
+        {
+            if(Format != null)
+            {
+                return true;
+            }
+            else
+            {
+                return false;
+            }
+        }
+
         /// <summary>
         /// 获取单元格要输出的内容
         /// </summary>
@@ -380,13 +404,24 @@ namespace WalkingTec.Mvvm.Core
                 {
                     rv = (col as DateTime?).Value.ToString("yyyy-MM-dd HH:mm:ss");
                 }
-                else if (col is Enum)
+                else if (col.GetType().IsEnumOrNullableEnum())
                 {
                     rv = (int)col;
                 }
+                else if (col.GetType().Namespace.Equals("System") == false)
+                {
+                    if (needFormat == false)
+                    {
+                        rv = JsonConvert.SerializeObject(col);
+                    }
+                    else
+                    {
+                        rv = col.ToString();
+                    }
+                }
                 else
                 {
-                    rv = col?.ToString();
+                    rv = col.ToString();
                 }
             }
             else

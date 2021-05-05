@@ -51,8 +51,9 @@
                                 { "name": "/ListAction", "title": "列表简介", "jump": "/VM/List" },
                                 { "name": "/ListAction", "title": "列表动作按钮", "jump": "/VM/ListAction" },
                                 { "name": "/ListColumn", "title": "列表列配置", "jump": "/VM/ListColumn" },
-                                { "name": "/SearchMode", "title": "查询模式", "jump": "/VM/SearchMode" }
-                            ]
+                                { "name": "/SearchMode", "title": "查询模式", "jump": "/VM/SearchMode" },
+                                { "name": "/Export", "title": "导出", "jump": "/VM/Export" }
+                           ]
                         },
                         { "name": "/Import", "title": "导入VM", "jump": "/VM/Import" },
                         { "name": "/Batch", "title": "批量操作VM", "jump": "/VM/Batch" },
@@ -108,9 +109,10 @@
                                 { "name": "/DateTime", "title": "DateTime", "jump": "/UI/DateTime" },
                                 { "name": "/Upload", "title": "Upload", "jump": "/UI/Upload" },
                                 { "name": "/Upload", "title": "MultiUpload", "jump": "/UI/UploadMulti" },
-                               { "name": "/Selector", "title": "Selector", "jump": "/UI/Selector" },
+                                { "name": "/Selector", "title": "Selector", "jump": "/UI/Selector" },
                                 { "name": "/Rich", "title": "RichTextBox", "jump": "/UI/Rich" },
-                                { "name": "/UEditor", "title": "UEditor", "jump": "/UI/UEditor" }
+                                { "name": "/UEditor", "title": "UEditor", "jump": "/UI/UEditor" },
+                                { "name": "/ColorPicker", "title": "ColorPicker", "jump": "/UI/ColorPicker" }
                             ]
                         },
                         { "name": "/Grid", "title": "数据表格", "jump": "/UI/Grid" },
@@ -129,6 +131,7 @@
                         { "name": "Log", "title": "日志管理", "jump": "/Admin/Log" },
                         { "name": "User", "title": "用户管理", "jump": "/Admin/User" },
                         { "name": "Role", "title": "角色管理", "jump": "/Admin/Role" },
+                        { "name": "Group", "title": "用户组管理", "jump": "/Admin/Group" },
                         { "name": "Menu", "title": "菜单管理", "jump": "/Admin/Menu" },
                         { "name": "Dp", "title": "数据权限管理", "jump": "/Admin/Dp" }
                     ]

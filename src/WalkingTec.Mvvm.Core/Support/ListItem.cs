@@ -1,4 +1,4 @@
-﻿using System.Collections.Generic;
+using System.Collections.Generic;
 
 namespace WalkingTec.Mvvm.Core
 {
@@ -12,7 +12,7 @@ namespace WalkingTec.Mvvm.Core
         /// <summary>
         /// The value to be submitted
         /// </summary>
-        public string Value { get; set; }
+        public object Value { get; set; }
 
     }
 
@@ -66,6 +66,7 @@ namespace WalkingTec.Mvvm.Core
         public string ICon { get; set; }
         public string Tag { get; set; }
         public bool Leaf => Children == null || Children.Count == 0;
+        public bool Selected { get; set; }
         public List<TreeSelectListItem> Children { get; set; }
     }
 }

@@ -3,6 +3,8 @@
 @using Newtonsoft.Json;
 @{
     var tempvar = $"var_{Guid.NewGuid().ToNoSplitString()}";
+    var linkscript = "";
+
 }
 
 <script>
@@ -18,7 +20,7 @@
         }
         if (selected.length > 0) {
             if (!multiSel && selected.length > 1) {
-                layui.layer.msg('最多只能选择一行');
+                layui.layer.msg('@WalkingTec.Mvvm.Core.Program._localizer["SelectOneRowMax"]');
                 return;
             }
             for (var i = 0; i < selected.length; i++) {
@@ -35,20 +37,20 @@
         }
         $("#@(ViewBag.SelId)_Display").val(displayStrArr.join(","));
         $("#@(ViewBag.SelId)_Display").after(hiddenStrArr.join(''));
+        @if (ViewBag.TriggerUrl != null)
+        {
+         
+           linkscript = $@"   
+            var url = '{ViewBag.TriggerUrl}?t=' + new Date().getTime();
+            for (var i = 0; i < selected.length; i++) {{
+              url += '&id=' +selected[i]['{ViewBag.ValName}'];
+              }}
+            ff.LinkedChange(url, '{WalkingTec.Mvvm.Core.Utils.GetIdByName(ViewBag.LinkFieldModel)}', '{ViewBag.LinkField}');
+  ";
+          }
+      @Html.Raw(linkscript);
     }
 
-    Array.prototype.removeByID = function (val) {
-        var index = -1;
-        for (var i = 0; i < this.length; i++) {
-            if (this[i].ID == val.ID) {
-                index = i;
-                break;
-            }
-        }
-        if (index > -1) {
-            this.splice(index, 1);
-        }
-    };
 
     var @(tempvar) = @Html.Raw(ViewBag.SelectData);
     function gridCheckedFunc(obj) {
@@ -95,8 +97,8 @@
 <wt:container style="margin:0px 10px 0px 10px" class='donotuse_pdiv'>
     <div style="height:10px">&nbsp;</div>
     $$SearchPanel$$
-    <wt:grid vm="@Model" hidden-panel="true" checked-func="gridCheckedFunc" />
+    <wt:grid vm="@Model" hidden-panel="true" checked-func="gridCheckedFunc" need-show-print="false" need-show-filter="false" />
     <wt:row align="AlignEnum.Right">
-        <wt:button click="submitSelect();" text="确定" size="ButtonSizeEnum.Normal" />
+        <wt:button click="submitSelect();" text="@WalkingTec.Mvvm.Core.Program._localizer["OK"]" size="ButtonSizeEnum.Normal" />
     </wt:row>
 </wt:container>

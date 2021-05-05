@@ -94,7 +94,10 @@ namespace WalkingTec.Mvvm.Core
         /// 列宽
         /// </summary>
         int? Width { get; set; }
-
+        /// <summary>
+        /// //监听单元格事件
+        /// </summary>
+        string Event { get; set; }
         /// <summary>
         /// 是否允许排序
         /// </summary>
@@ -210,7 +213,7 @@ namespace WalkingTec.Mvvm.Core
         /// <param name="source">源数据</param>
         /// <returns>背景色</returns>
         string GetBackGroundColor(object source);
-
+        bool HasFormat();
         #endregion
     }
 

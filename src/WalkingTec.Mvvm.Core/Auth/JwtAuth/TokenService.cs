@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using WalkingTec.Mvvm.Core.Extensions;
 
 namespace WalkingTec.Mvvm.Core.Auth
 {
@@ -91,13 +92,14 @@ namespace WalkingTec.Mvvm.Core.Auth
             PersistedGrant persistedGrant = await _dc.Set<PersistedGrant>().Where(x => x.RefreshToken == refreshToken).SingleOrDefaultAsync();
             if (persistedGrant != null)
             {
-                // 校验 regresh token 有效期
-                if (persistedGrant.Expiration < DateTime.Now)
-                    throw new Exception("refresh token 已过期");
 
                 // 删除 refresh token
                 _dc.DeleteEntity(persistedGrant);
                 await _dc.SaveChangesAsync();
+
+                // 校验 regresh token 有效期
+                if (persistedGrant.Expiration < DateTime.Now)
+                    throw new Exception("refresh token 已过期");
 
                 var user = await _dc.Set<FrameworkUserBase>()
                                     .Include(x => x.UserRoles).Include(x => x.UserGroups)
@@ -129,10 +131,10 @@ namespace WalkingTec.Mvvm.Core.Auth
                     //FunctionPrivileges = funcPrivileges
                 };
 
-                // 清理过期 refreshtoken
-                var sql = $"DELETE FROM persistedgrants WHERE Expiration<'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}'";
-                _dc.RunSQL(sql);
-                _logger.LogDebug("清理过期的refreshToken：【sql:{0}】", sql);
+                //// 清理过期 refreshtoken
+                //var sql = $"DELETE FROM {_dc.GetTableName<PersistedGrant>().ToLower()} WHERE Expiration<'{DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.fff")}'";
+                //_dc.RunSQL(sql);
+                //_logger.LogDebug("清理过期的refreshToken：【sql:{0}】", sql);
 
                 // 颁发 token
                 return await IssueTokenAsync(loginUserInfo);

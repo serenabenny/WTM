@@ -53,6 +53,7 @@ namespace WalkingTec.Mvvm.TagHelpers.LayUI
         /// 同时上传的文件数（0不限制）
         /// </summary>
         public int NumFileOnce { get; set; }
+        public string ConnectionString { get; set; }
 
         public override void Process(TagHelperContext context, TagHelperOutput output)
         {
@@ -61,13 +62,13 @@ namespace WalkingTec.Mvvm.TagHelpers.LayUI
             {
                 idstring = subfiles.Select(x => x.FileId.ToString()).ToSpratedString(seperator: "|");
             }
-            else
-            {
-                output.TagName = "div";
-                output.TagMode = TagMode.StartTagAndEndTag;
-                output.Content.SetContent("Field must be set to a List<ISubFile>");
-                return;
-            }
+            //else
+            //{
+            //    output.TagName = "div";
+            //    output.TagMode = TagMode.StartTagAndEndTag;
+            //    output.Content.SetContent("Field must be set to a List<ISubFile>");
+            //    return;
+            //}
             output.TagName = "button";
             output.Attributes.Add("id", Id + "button");
             output.Attributes.Add("name", Id + "button");
@@ -125,9 +126,16 @@ namespace WalkingTec.Mvvm.TagHelpers.LayUI
                     url += "&height=" + ThumbHeight;
                 }
             }
-            if (vm != null)
+            if (string.IsNullOrEmpty(ConnectionString) == true)
             {
-                url += $"&_DONOT_USE_CS={vm.CurrentCS}";
+                if (vm != null)
+                {
+                    url = url.AppendQuery($"_DONOT_USE_CS={vm.CurrentCS}");
+                }
+            }
+            else
+            {
+                url = url.AppendQuery($"_DONOT_USE_CS={ConnectionString}");
             }
 
             output.PreElement.SetHtmlContent($@"
@@ -143,9 +151,13 @@ namespace WalkingTec.Mvvm.TagHelpers.LayUI
                 initselected = initselected.Substring(0, initselected.Length - 1);
             }
             initselected += "]";
-
+            var requiredtext = "";
+            if (Field.Metadata.IsRequired)
+            {
+                requiredtext = $" lay-verify=\"required\" lay-reqText=\"{Program._localizer["{0}required", Field?.Metadata?.DisplayName ?? Field?.Metadata?.Name]}\"";
+            }
             output.PostElement.SetHtmlContent($@"
-<input type='hidden' id='{Id}'  {(Field.Metadata.IsRequired ? " lay-verify=required" : string.Empty)} />
+<input type='hidden' id='{Id}'  {requiredtext} />
 <script>
   var {Id}selected = {initselected};
 {Id}SetValues();
@@ -153,10 +165,15 @@ namespace WalkingTec.Mvvm.TagHelpers.LayUI
     var f = $('#{Id}').parents('form');
     f.find(""[{Id}hidden='{Id}']"").remove();
     var count = 0;
-    for(x in {Id}selected){{
+    for(count=0; count< {Id}selected.length;count++){{
         var name = ""{Field.Name}["" + count + ""].FileId"";
-        f.append($('<input {Id}hidden=""{Id}"" type=""hidden"" name=""' + name + '"" value=""' + {Id}selected[x] + '"">'));
-        count++;
+        f.append($('<input {Id}hidden=""{Id}"" type=""hidden"" name=""' + name + '"" value=""' + {Id}selected[count] + '"">'));
+    }}
+    if(count > 0){{
+        f.find(""#{Id}"").val(""1"");
+    }}
+    else{{
+        f.find(""#{Id}"").val("""");
     }}
   }}
   function {Id}DoDelete(fileid){{

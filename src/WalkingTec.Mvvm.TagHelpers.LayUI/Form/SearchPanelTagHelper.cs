@@ -127,6 +127,11 @@ namespace WalkingTec.Mvvm.TagHelpers.LayUI
             {
                 show = GlobalServices.GetRequiredService<Configs>().UiOptions.SearchPanel.DefaultExpand;
             }
+            string showpage = "";
+            if (ListVM?.NeedPage == true)
+            {
+                showpage = ",page:{curr:1}";
+            }
             var layuiShow = show ? " layui-show" : string.Empty;
             output.PreContent.AppendHtml($@"
 <div class=""layui-collapse"" style=""margin-bottom:5px;"" lay-filter=""{tempSearchTitleId}x"">
@@ -134,7 +139,7 @@ namespace WalkingTec.Mvvm.TagHelpers.LayUI
     <h2 class=""layui-colla-title"">{Program._localizer["SearchCondition"]}
       <div style=""text-align:right;margin-top:-43px;"" id=""{tempSearchTitleId}"">
         <a href=""javascript:void(0)"" class=""layui-btn layui-btn-sm"" id=""{SearchBtnId}""><i class=""layui-icon"">&#xe615;</i>{Program._localizer["Search"]}</a>
-        {(!ResetBtn ? string.Empty : $@"<button type=""reset"" class=""layui-btn layui-btn-sm"" id=""{ResetBtnId}"">{Program._localizer["Reset"]}</button>")}
+        {(!ResetBtn ? string.Empty : $@"<button type=""button"" class=""layui-btn layui-btn-sm"" id=""{ResetBtnId}"">{Program._localizer["Reset"]}</button>")}
       </div>
     </h2>
     <div class=""layui-colla-content{layuiShow}"" >
@@ -160,7 +165,10 @@ layui.element.on('collapse({tempSearchTitleId}x)', function(data){{
 {(OldPost == true ? $"" : $@"
 $('#{SearchBtnId}').on('click', function () {{
   var layer = layui.layer;
-  table.reload('{GridId}',{{where: $.extend(JSON.parse(JSON.stringify({TableJSVar}.config.where)),ff.GetSearchFormData('{Id}','{Vm.Name}')),
+    var tempwhere = {{}};
+    $.extend(tempwhere,{GridId}defaultfilter.where);
+      {GridId}filterback.where = tempwhere;
+  table.reload('{GridId}',{{url:{GridId}url,where: $.extend(tempwhere,ff.GetSearchFormData('{Id}','{Vm.Name}')){showpage}
     //done: function(res,curr,count){{
     //  if(this.height == undefined){{
     //    var tab = $('#{GridId} + .layui-table-view');tab.css('overflow','hidden').addClass('donotuse_fill donotuse_pdiv');tab.children('.layui-table-box').addClass('donotuse_fill donotuse_pdiv').css('height','100px');tab.find('.layui-table-main').addClass('donotuse_fill');tab.find('.layui-table-header').css('min-height','40px');

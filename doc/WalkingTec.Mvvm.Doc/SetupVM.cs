@@ -10,7 +10,7 @@ using System.Threading;
 
 namespace WalkingTec.Mvvm.Doc
 {
-    public enum UIEnum { LayUI, React }
+    public enum UIEnum { LayUI, React, Vue }
     public enum ProjectTypeEnum { Single, Multi }
 
     public enum DotnetVersionEnum { dotnet2_2, dotnet3_0}
@@ -20,7 +20,7 @@ namespace WalkingTec.Mvvm.Doc
         private string version = "";
         private string SwashbuckleVersion = "";
         private string EFDesignVersion = "";
-
+        private string RazorPackage = "";
         public bool EnableLog { get; set; }
 
         public bool LogExceptionOnly { get; set; }
@@ -138,11 +138,13 @@ namespace WalkingTec.Mvvm.Doc
                     SwashbuckleVersion = "4.0.1";
                     EFDesignVersion = "2.2.4";
                     version = Utils.GetNugetVersion("2.",false);
+                    RazorPackage = "";
                     break;
                 case DotnetVersionEnum.dotnet3_0:
                     SwashbuckleVersion = "5.0.0-rc4";
-                    EFDesignVersion = "3.1.0";
+                    EFDesignVersion = "3.1.5";
                     version = Utils.GetNugetVersion("3.",true);
+                    RazorPackage = "    <PackageReference Include=\"Microsoft.AspNetCore.Mvc.Razor.RuntimeCompilation\" Version=\"3.1.5\" />";
                     break;
                 default:
                     break;
@@ -213,6 +215,7 @@ namespace WalkingTec.Mvvm.Doc
     <PackageReference Include=""WalkingTec.Mvvm.Mvc.Admin"" Version=""{version}"" />
     <PackageReference Include=""Swashbuckle.AspNetCore"" Version=""{SwashbuckleVersion}"" />
     <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""{EFDesignVersion}"" />
+    {RazorPackage}
 </ItemGroup>
 </Project>
 ");
@@ -230,7 +233,8 @@ namespace WalkingTec.Mvvm.Doc
     <PackageReference Include=""WalkingTec.Mvvm.Mvc.Admin"" Version=""{version}"" />
     <PackageReference Include=""Swashbuckle.AspNetCore"" Version=""{SwashbuckleVersion}"" />
     <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""{EFDesignVersion}"" />
- </ItemGroup>
+    {RazorPackage}
+  </ItemGroup>
   <ItemGroup>
     <Content Remove=""$(SpaRoot)**"" />
     <None Include=""$(SpaRoot)**"" Exclude=""$(SpaRoot)node_modules\**;$(SpaRoot).awcache\**;$(SpaRoot).cache-loader\**"" />
@@ -266,6 +270,72 @@ namespace WalkingTec.Mvvm.Doc
 </PropertyGroup>
 ");
             }
+
+            if (UI == UIEnum.Vue)
+            {
+                proj = proj.Replace("</Project>", $@"
+  <ItemGroup>
+    <PackageReference Include=""WalkingTec.Mvvm.TagHelpers.LayUI"" Version=""{version}"" />
+    <PackageReference Include=""WalkingTec.Mvvm.Mvc.Admin"" Version=""{version}"" />
+    <PackageReference Include=""Swashbuckle.AspNetCore"" Version=""{SwashbuckleVersion}"" />
+    <PackageReference Include=""Microsoft.EntityFrameworkCore.Tools"" Version=""{EFDesignVersion}"" />
+    {RazorPackage}
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Remove=""ClientApp\dist\**"" />
+    <Content Remove=""$(SpaRoot)**"" />
+    <Content Remove=""ClientApp\dist\**"" />
+    <None Include=""$(SpaRoot)**"" Exclude=""$(SpaRoot)node_modules\**;$(SpaRoot)dist\**;$(SpaRoot)dist\**;$(SpaRoot).awcache\**;$(SpaRoot).cache-loader\**"" />
+    <EmbeddedResource Remove=""ClientApp\dist\**"" />
+    <None Remove=""ClientApp\dist\**"" />
+    <None Remove=""ClientApp\package-lock.json"" />
+  </ItemGroup>
+  <Target Name=""DebugEnsureNodeEnv"" BeforeTargets=""Build"" Condition="" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)node_modules') "">
+    <Exec Command=""node --version"" ContinueOnError=""true"">
+      <Output TaskParameter=""ExitCode"" PropertyName=""ErrorCode"" />
+    </Exec>
+    <Error Condition=""'$(ErrorCode)' != '0'"" Text=""Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE."" />
+    <Message Importance=""high"" Text=""Restoring dependencies using 'npm'. This may take several minutes..."" />
+    <Exec WorkingDirectory=""$(SpaRoot)"" Command=""npm install"" />
+  </Target>
+
+  <Target Name=""DebugRunWebpack"" BeforeTargets=""Build"" Condition="" '$(Configuration)' == 'Debug' And !Exists('$(SpaRoot)dist') "">
+    <!-- Ensure Node.js is installed -->
+    <Exec Command=""node --version"" ContinueOnError=""true"">
+      <Output TaskParameter=""ExitCode"" PropertyName=""ErrorCode"" />
+    </Exec>
+    <Error Condition=""'$(ErrorCode)' != '0'"" Text=""Node.js is required to build and run this project. To continue, please install Node.js from https://nodejs.org/, and then restart your command prompt or IDE."" />
+
+    <!-- In development, the dist files won't exist on the first run or when cloning to
+         a different machine, so rebuild them if not already present. -->
+    <Message Importance=""high"" Text=""Performing first-run Webpack build..."" />
+    <Exec WorkingDirectory=""$(SpaRoot)"" Command=""node node_modules/webpack/bin/webpack.js --config config/webpack.dev.js"" />
+  </Target>
+
+  <Target Name=""PublishRunWebpack"" AfterTargets=""ComputeFilesToPublish"">
+    <Exec WorkingDirectory=""$(SpaRoot)"" Command=""npm install"" />
+    <Exec WorkingDirectory=""$(SpaRoot)"" Command=""npm run build"" />
+    <ItemGroup>
+      <DistFiles Include=""$(SpaRoot)build\**"" />
+      <ResolvedFileToPublish Include=""@(DistFiles->'%(FullPath)')"" Exclude=""@(ResolvedFileToPublish)"">
+        <RelativePath>%(DistFiles.Identity)</RelativePath>
+        <CopyToPublishDirectory>PreserveNewest</CopyToPublishDirectory>
+      </ResolvedFileToPublish>
+    </ItemGroup>
+  </Target>
+</Project>
+");
+                proj = proj.Replace("</PropertyGroup>", $@"
+    <TypeScriptCompileBlocked>true</TypeScriptCompileBlocked>
+    <TypeScriptToolsVersion>3.2</TypeScriptToolsVersion>
+    <IsPackable>false</IsPackable>
+    <SpaRoot>ClientApp\</SpaRoot>
+    <DefaultItemExcludes>$(DefaultItemExcludes);$(SpaRoot)node_modules\**</DefaultItemExcludes>
+    <CopyRefAssembliesToPublishDirectory>true</CopyRefAssembliesToPublishDirectory>
+</PropertyGroup>
+");
+            }
+
 
             if (ProjectType == ProjectTypeEnum.Multi)
             {
@@ -389,6 +459,7 @@ EndProject
                 File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Views{Path.DirectorySeparatorChar}Login{Path.DirectorySeparatorChar}Reg.cshtml", GetResource("home.Reg.txt", "Mvc").Replace("$ns$", MainNs).Replace("$vmns$", vmns), Encoding.UTF8);
                 File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Views{Path.DirectorySeparatorChar}Home{Path.DirectorySeparatorChar}PIndex.cshtml", GetResource("home.PIndex.txt", "Mvc").Replace("$ns$", MainNs).Replace("$vmns$", vmns), Encoding.UTF8);
                 File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Views{Path.DirectorySeparatorChar}Home{Path.DirectorySeparatorChar}FrontPage.cshtml", GetResource("home.FrontPage.txt", "Mvc").Replace("$ns$", MainNs).Replace("$vmns$", vmns), Encoding.UTF8);
+                File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Views{Path.DirectorySeparatorChar}Home{Path.DirectorySeparatorChar}FrontPage.en.cshtml", GetResource("home.FrontPage2.txt", "Mvc").Replace("$ns$", MainNs).Replace("$vmns$", vmns), Encoding.UTF8);
                 File.WriteAllText($"{vmdir}{Path.DirectorySeparatorChar}HomeVMs{Path.DirectorySeparatorChar}ChangePasswordVM.cs", GetResource("vms.ChangePasswordVM.txt").Replace("$ns$", MainNs).Replace("$vmns$", vmns), Encoding.UTF8);
                 File.WriteAllText($"{vmdir}{Path.DirectorySeparatorChar}HomeVMs{Path.DirectorySeparatorChar}LoginVM.cs", GetResource("vms.LoginVM.txt").Replace("$ns$", MainNs).Replace("$vmns$", vmns), Encoding.UTF8);
                 File.WriteAllText($"{vmdir}{Path.DirectorySeparatorChar}HomeVMs{Path.DirectorySeparatorChar}RegVM.cs", GetResource("vms.RegVM.txt").Replace("$ns$", MainNs).Replace("$vmns$", vmns), Encoding.UTF8);
@@ -405,7 +476,7 @@ EndProject
                 Directory.CreateDirectory($"{MainDir}{Path.DirectorySeparatorChar}ClientApp");
                 UnZip("WalkingTec.Mvvm.Doc.SetupFiles.Mvc.layui.layui.zip", $"{MainDir}{Path.DirectorySeparatorChar}wwwroot");
                 UnZip("WalkingTec.Mvvm.Doc.SetupFiles.Spa.React.ClientApp.zip", $"{MainDir}{Path.DirectorySeparatorChar}ClientApp");
-                File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Program.cs", GetResource("Program.txt", "Spa").Replace("$ns$", MainNs), Encoding.UTF8);
+                File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Program.cs", GetResource("React.Program.txt", "Spa").Replace("$ns$", MainNs), Encoding.UTF8);
                 var config = File.ReadAllText($"{MainDir}{Path.DirectorySeparatorChar}ClientApp{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}global.config.tsx");
                 File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}ClientApp{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}global.config.tsx", config.Replace("title: \"WalkingTec MVVM\",", $"title: \"{MainNs}\","), Encoding.UTF8);
                 File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}ClientApp{Path.DirectorySeparatorChar}src{Path.DirectorySeparatorChar}setupProxy.js", $@"
@@ -421,6 +492,16 @@ module.exports = (app) => {{
 ", Encoding.UTF8);
 
             }
+            if (UI == UIEnum.Vue)
+            {
+                Directory.CreateDirectory($"{MainDir}{Path.DirectorySeparatorChar}ClientApp");
+                UnZip("WalkingTec.Mvvm.Doc.SetupFiles.Mvc.layui.layui.zip", $"{MainDir}{Path.DirectorySeparatorChar}wwwroot");
+                UnZip("WalkingTec.Mvvm.Doc.SetupFiles.Spa.Vue.ClientApp.zip", $"{MainDir}{Path.DirectorySeparatorChar}ClientApp");
+                File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Program.cs", GetResource("Vue.Program.txt", "Spa").Replace("$ns$", MainNs), Encoding.UTF8);
+                var config = File.ReadAllText($"{MainDir}{Path.DirectorySeparatorChar}ClientApp{Path.DirectorySeparatorChar}config{Path.DirectorySeparatorChar}webpack.dev.js");
+                File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}ClientApp{Path.DirectorySeparatorChar}config{Path.DirectorySeparatorChar}webpack.dev.js", config.Replace("target: \"http://localhost:7598/\",", $"target: \"http://localhost:{Port}/\","), Encoding.UTF8);
+            }
+
 
             if (File.Exists($"{MainDir}{Path.DirectorySeparatorChar}Startup.cs"))
             {
@@ -428,9 +509,17 @@ module.exports = (app) => {{
             }
         }
 
-        public string GetIndex()
+        public string GetIndex(bool en=false)
         {
-            var rv = GetResource("SetupIndex.txt");
+            string rv = "";
+            if (en == false)
+            {
+                rv = GetResource("SetupIndex.txt");
+            }
+            else
+            {
+                rv = GetResource("SetupIndex_en.txt");
+            }
             string dbname = "";
             if (MainNs.Contains("."))
             {
@@ -450,11 +539,18 @@ module.exports = (app) => {{
             return rv;
         }
 
+        public string GetIndex1En()
+        {
+            var rv = GetResource("SetupIndex1_en.txt");
+            return rv;
+        }
+
+
         private string GetResource(string fileName, string subdir = "")
         {
             if(fileName == "Proj.txt" || fileName == "TestProj.txt" ||
-                fileName == "Program.txt" || fileName == "layui.Program.txt"
-                || fileName == "DefaultProj.txt" )
+                fileName == "React.Program.txt" || fileName == "Vue.Program.txt" || fileName == "layui.Program.txt"
+                || fileName == "DefaultProj.txt" || fileName == "Launch.txt")
             {
                 if(DotnetVersion == DotnetVersionEnum.dotnet3_0)
                 {
@@ -522,9 +618,13 @@ module.exports = (app) => {{
         {
             File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}{MainNs}.csproj", GetResource("DefaultProj.txt"), Encoding.UTF8);
             File.WriteAllText($"{ExtraDir}{Path.DirectorySeparatorChar}{MainNs}.sln", GetResource("DefaultSolution.txt").Replace("$ns$", MainNs).Replace("$guid$", Guid.NewGuid().ToString()), Encoding.UTF8);
-            if (UI == UIEnum.React)
+            if (UI == UIEnum.React || UI == UIEnum.Vue)
             {
                 File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Properties{Path.DirectorySeparatorChar}launchSettings.json", GetResource("Launch.txt", "Spa").Replace("$ns$", MainNs).Replace("$port$", Port.ToString()), Encoding.UTF8);
+            }
+            else
+            {
+                File.WriteAllText($"{MainDir}{Path.DirectorySeparatorChar}Properties{Path.DirectorySeparatorChar}launchSettings.json", GetResource("Launch.txt", "Mvc").Replace("$ns$", MainNs).Replace("$port$", Port.ToString()), Encoding.UTF8);
             }
         }
     }
